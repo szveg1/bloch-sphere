@@ -1,9 +1,20 @@
 import * as THREE from 'three';
-import { createSphereGroup, setupLabelRenderer, makeKaTeXLabel, createArrowHelper } from './sceneUtils';
+import { OrbitControls } from 'three/addons/controls/OrbitControls';
+import { setupLabelRenderer } from './sceneUtils';
+import { Arrow } from './Arrow';
+import { Sphere } from './Sphere';
 
-export function initThree(canvas: HTMLCanvasElement) {
+export type Gate = 'X' | 'Y' | 'Z' | 'H';
+
+export interface ThreeController {
+    applyGate: (gate: Gate) => void;
+    reset: () => void;
+    dispose: () => void;
+}
+
+export function initThree(canvas: HTMLCanvasElement): ThreeController | null {
     if (!canvas) {
-        return () => {};
+        return null;
     }
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -20,19 +31,36 @@ export function initThree(canvas: HTMLCanvasElement) {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
 
-    const sphereGroup = createSphereGroup(0.5);
-    scene.add(sphereGroup);
-    const labelRenderer = setupLabelRenderer(canvas);
-    const arrow = createArrowHelper(new THREE.Vector3(1, 0, 0), 0.5, 0xff0000);
-    sphereGroup.add(arrow);
+    const controls = new OrbitControls(camera, canvas);
+    controls.update();
 
-    const radius = 0.5;
-    const labelOffset = 0.08;
-    const ket0 = makeKaTeXLabel('\\ket{0}', 20, '#000000');
-    ket0.position.set(0, radius + labelOffset, 0);
-    const ket1 = makeKaTeXLabel('\\ket{1}', 20, '#000000');
-    ket1.position.set(0, -radius - labelOffset, 0);
-    sphereGroup.add(ket0, ket1);
+    const labelRenderer = setupLabelRenderer(canvas);
+    const sphere = new Sphere(0.5, 8);
+    const arrow = new Arrow(new THREE.Vector3(0, 1, 0));
+    const arrowGroup = arrow.create();
+    scene.add(arrowGroup, sphere.create());
+
+    function gateQuaternion(gate: Gate): THREE.Quaternion {
+        const axis = new THREE.Vector3();
+        let angle = Math.PI;
+
+        switch (gate) {
+            case 'X': 
+                axis.set(1,0,0); 
+                break;
+            case 'Y': 
+                axis.set(0,0,1); 
+                break;
+            case 'Z': 
+                axis.set(0,1,0);
+                break;
+            case 'H': {
+                axis.set(1,1,0).normalize();
+                break;
+            }
+        }
+        return new THREE.Quaternion().setFromAxisAngle(axis, angle);
+    }
 
     function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
         const canvas = renderer.domElement;
@@ -56,6 +84,7 @@ export function initThree(canvas: HTMLCanvasElement) {
             camera.updateProjectionMatrix();
         }
 
+        controls.update();
         renderer.render(scene, camera);
         labelRenderer.render(scene, camera);
         rafId = requestAnimationFrame(render);
@@ -63,17 +92,22 @@ export function initThree(canvas: HTMLCanvasElement) {
 
     rafId = requestAnimationFrame(render);
 
-    return () => {
-        cancelAnimationFrame(rafId);
-
-        [ket0, ket1].forEach((l) => {
-            if (l.parent) l.parent.remove(l);
-        });
-
-        if (labelRenderer.domElement && labelRenderer.domElement.parentElement) {
-            labelRenderer.domElement.parentElement.removeChild(labelRenderer.domElement);
+    const controller: ThreeController = {
+        applyGate(gate: Gate) {
+            const q = gateQuaternion(gate);
+            arrow.applyQuaternion(q);
+        },
+        reset() {
+            arrow.setDirection(new THREE.Vector3(0,1,0));
+        },
+        dispose() {
+            cancelAnimationFrame(rafId);
+            if (labelRenderer.domElement && labelRenderer.domElement.parentElement) {
+                labelRenderer.domElement.parentElement.removeChild(labelRenderer.domElement);
+            }
+            renderer.dispose();
         }
-
-        renderer.dispose();
     };
+
+    return controller;
 }
