@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { makeKaTeXLabel } from './sceneUtils';
+import { makeKaTeXLabel } from './Utils';
 
 export class Sphere {
     private radius: number;

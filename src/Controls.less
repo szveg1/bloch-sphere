@@ -1,12 +1,28 @@
 .Controls {
-    .h1 {
-        font-size: 24px;
-        color: #ffffff;
+    display: grid;
+    text-align: center;
+    grid-template-rows: max-content auto auto;
+    .QubitLabel {
+        justify-content: center;
         text-align: center;
+        margin: 1rem;
+        display: inline;
+    }
+    .QubitState {
+        justify-content: center;
+        align-content: start;
+        display: inline-grid;
+        grid-template-columns: repeat(2, max-content);
+        grid-template-rows: repeat(2, max-content);
+        gap: 0.7rem;
+        
     }
     .Gates {
-        justify-items: center;
-        display: grid;
-        grid-template-columns: 1fr  1fr;
+        justify-content: center;
+        align-content: start;
+        display: inline-grid;
+        grid-template-columns: repeat(2, max-content);
+        grid-template-rows: repeat(4, max-content);
+        gap: 0.7rem;
     }
-}   
+}

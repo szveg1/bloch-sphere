@@ -19,7 +19,7 @@ export function makeKaTeXLabel(latex: string, fontSize = 20, color = '#ffffff') 
     div.style.lineHeight = '1';
     div.style.whiteSpace = 'nowrap';
     div.style.pointerEvents = 'none';
-    const macros: any = { '\\ket': '\\lvert#1\\rangle' };
+    const macros: Record<string, string> = { '\\ket': '\\lvert#1\\rangle' };
     try {
         div.innerHTML = KaTeX.renderToString(latex, { throwOnError: false, macros });
     } catch (e) {

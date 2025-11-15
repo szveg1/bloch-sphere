@@ -1,18 +1,15 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls';
-import { setupLabelRenderer } from './sceneUtils';
+import { setupLabelRenderer } from './Utils';
 import { Arrow } from './Arrow';
 import { Sphere } from './Sphere';
-
-export type Gate = 'X' | 'Y' | 'Z' | 'H';
+import { Qubit } from './Qubit';
 
 export interface ThreeController {
-    applyGate: (gate: Gate) => void;
-    reset: () => void;
     dispose: () => void;
 }
 
-export function initThree(canvas: HTMLCanvasElement): ThreeController | null {
+export function initThree(canvas: HTMLCanvasElement, qubit: Qubit): ThreeController | null {
     if (!canvas) {
         return null;
     }
@@ -40,27 +37,7 @@ export function initThree(canvas: HTMLCanvasElement): ThreeController | null {
     const arrowGroup = arrow.create();
     scene.add(arrowGroup, sphere.create());
 
-    function gateQuaternion(gate: Gate): THREE.Quaternion {
-        const axis = new THREE.Vector3();
-        let angle = Math.PI;
-
-        switch (gate) {
-            case 'X': 
-                axis.set(1,0,0); 
-                break;
-            case 'Y': 
-                axis.set(0,0,1); 
-                break;
-            case 'Z': 
-                axis.set(0,1,0);
-                break;
-            case 'H': {
-                axis.set(1,1,0).normalize();
-                break;
-            }
-        }
-        return new THREE.Quaternion().setFromAxisAngle(axis, angle);
-    }
+    qubit.setArrow(arrow);
 
     function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
         const canvas = renderer.domElement;
@@ -93,13 +70,6 @@ export function initThree(canvas: HTMLCanvasElement): ThreeController | null {
     rafId = requestAnimationFrame(render);
 
     const controller: ThreeController = {
-        applyGate(gate: Gate) {
-            const q = gateQuaternion(gate);
-            arrow.applyQuaternion(q);
-        },
-        reset() {
-            arrow.setDirection(new THREE.Vector3(0,1,0));
-        },
         dispose() {
             cancelAnimationFrame(rafId);
             if (labelRenderer.domElement && labelRenderer.domElement.parentElement) {
