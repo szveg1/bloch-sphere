@@ -15,7 +15,7 @@ export function Controls({ qubit, onUpdate }: ControlsProps) {
     const [theta, setTheta] = useState(0);
     const [phi, setPhi] = useState(0);
 
-    const qubitHtml = useMemo(() => KaTeX.renderToString(qubit.makeLatex(), { throwOnError: false }), [qubit]);
+    const qubitHtml = useMemo(() => KaTeX.renderToString(qubit.makeLatex(), { throwOnError: false }), [qubit, qubit.alpha, qubit.beta]);
     const phaseHtml = useMemo(() => KaTeX.renderToString(`\\phi = ${(phase / Math.PI).toFixed(2)}\\pi`, { throwOnError: false }), [phase]);
 
     const handleGate = (gate: Gate, gatePhase?: number) => {
